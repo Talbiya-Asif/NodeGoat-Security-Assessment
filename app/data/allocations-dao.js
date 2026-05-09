@@ -26,9 +26,9 @@ const AllocationsDAO = function(db){
             bonds: bonds
         };
 
-        allocationsCol.update({
+        allocationsCol.updateOne({
             userId: parsedUserId
-        }, allocations, {
+        }, { $set: allocations }, {
             upsert: true
         }, err => {
 

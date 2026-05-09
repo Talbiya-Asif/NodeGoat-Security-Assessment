@@ -42,7 +42,7 @@ function UserDAO(db) {
             console.log(typeof(id));
 
             user._id = id;
-            usersCol.insert(user, (err, result) => !err ? callback(null, result.ops[0]) : callback(err, null));
+            usersCol.insertOne(user, (err, result) => !err ? callback(null, user) : callback(err, null));
         });
     };
 
@@ -107,16 +107,11 @@ function UserDAO(db) {
     };
 
     this.getNextSequence = (name, callback) => {
-        db.collection("counters").findAndModify({
-                _id: name
-            }, [], {
-                $inc: {
-                    seq: 1
-                }
-            }, {
-                new: true
-            },
-            (err, data) =>  err ? callback(err, null) : callback(null, data.value.seq));
+        db.collection("counters").findOneAndUpdate(
+            { _id: name },
+            { $inc: { seq: 1 } },
+            { returnDocument: "after", upsert: true },
+            (err, data) => err ? callback(err, null) : callback(null, data.value.seq));
     };
 }
 
