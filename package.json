@@ -5,22 +5,26 @@
   "description": "A tool to learn OWASP Top 10 for node.js developers",
   "main": "server.js",
   "dependencies": {
+    "bcrypt": "^6.0.0",
     "bcrypt-nodejs": "0.0.3",
     "body-parser": "^1.15.1",
     "consolidate": "^0.14.1",
     "csurf": "^1.8.3",
     "dont-sniff-mimetype": "^1.0.0",
     "express": "^4.13.4",
+    "express-rate-limit": "^8.5.1",
     "express-session": "^1.13.0",
     "forever": "^2.0.0",
-    "helmet": "^2.0.0",
+    "helmet": "^2.3.0",
+    "jsonwebtoken": "^9.0.3",
     "marked": "0.3.5",
     "mongodb": "^4.17.0",
     "needle": "2.2.4",
     "node-esapi": "0.0.1",
     "serve-favicon": "^2.3.0",
     "swig": "^1.4.2",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "validator": "^13.15.35"
   },
   "comments": {
     "//": "a9 insecure components"

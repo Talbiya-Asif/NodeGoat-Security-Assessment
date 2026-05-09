@@ -1,5 +1,9 @@
 const UserDAO = require("../data/user-dao").UserDAO;
 const AllocationsDAO = require("../data/allocations-dao").AllocationsDAO;
+const validator = require('validator');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const SECRET_KEY = 'internship-secret-key-change-later';
 const {
     environmentalScripts
 } = require("../../config/config");
@@ -113,7 +117,13 @@ function SessionHandler(db) {
             // by wrapping the below code as a function callback for the method req.session.regenerate()
             // i.e:
             // `req.session.regenerate(() => {})`
+            const token = jwt.sign(
+                { id: user._id, username: user.userName },
+                SECRET_KEY,
+                { expiresIn: '1h' }
+            );
             req.session.userId = user._id;
+            req.session.token = token;
             return res.redirect(user.isAdmin ? "/benefits" : "/dashboard");
         });
     };
@@ -203,9 +213,19 @@ function SessionHandler(db) {
             "email": email
         };
 
-        if (validateSignup(userName, firstName, lastName, password, verify, email, errors)) {
+        if (!validator.isEmail(email)) {
+    errors.emailError = "Invalid email address.";
+    return res.render("signup", { ...errors, environmentalScripts });
+}
+if (!validator.isAlphanumeric(userName)) {
+    errors.userNameError = "Username: letters and numbers only.";
+    return res.render("signup", { ...errors, environmentalScripts });
+}
+const cleanUserName = validator.escape(userName);
 
-            userDAO.getUserByUserName(userName, (err, user) => {
+if (validateSignup(cleanUserName, firstName, lastName, password, verify, email, errors)) {
+
+    userDAO.getUserByUserName(cleanUserName, (err, user) =>  {
 
                 if (err) return next(err);
 
@@ -217,7 +237,7 @@ function SessionHandler(db) {
                     });
                 }
 
-                userDAO.addUser(userName, firstName, lastName, password, email, (err, user) => {
+                userDAO.addUser(cleanUserName, firstName, lastName, password, email, async (err, user) => {
 
                     if (err) return next(err);
 
