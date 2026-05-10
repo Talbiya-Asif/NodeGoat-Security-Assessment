@@ -59,7 +59,11 @@ function UserDAO(db) {
 
         // Helper function to compare passwords
         const comparePassword = (fromDB, fromUser) => {
-    return bcrypt.compareSync(fromUser, fromDB);
+            try {
+            return bcrypt.compareSync(fromUser, fromDB);
+            } catch (err) {
+            return false;
+            }
             /*
             // Fix for A2-Broken Auth
             // compares decrypted password stored in this.addUser()
