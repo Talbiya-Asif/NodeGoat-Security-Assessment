@@ -1,5 +1,6 @@
 "use strict";
 
+const csrf = require("csurf");
 const cors = require("cors");
 const { generalLimiter, authLimiter, corsOptions, helmetConfig } = require("./middleware/security");
 const express = require("express");
@@ -42,6 +43,15 @@ MongoClient.connect(db, (err, client) => {
         saveUninitialized: true,
         resave: true
     }));
+    app.use(csrf());
+    app.use((req, res, next) => {
+        if (req.csrfToken) {
+            res.locals.csrfToken = req.csrfToken();
+            res.locals.csrftoken = req.csrfToken();
+            res.locals._csrf = req.csrfToken();
+       }
+       next();
+    });
 
     app.engine(".html", consolidate.swig);
     app.set("view engine", "html");

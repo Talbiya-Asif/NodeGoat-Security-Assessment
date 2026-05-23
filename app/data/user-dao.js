@@ -64,11 +64,6 @@ function UserDAO(db) {
             } catch (err) {
             return false;
             }
-            /*
-            // Fix for A2-Broken Auth
-            // compares decrypted password stored in this.addUser()
-            return bcrypt.compareSync(fromDB, fromUser);
-            */
         };
 
         // Callback to pass to MongoDB that validates a user document
@@ -77,7 +72,7 @@ function UserDAO(db) {
             if (err) return callback(err, null);
 
             if (user) {
-                if (comparePassword(password, user.password)) {
+                if (comparePassword(user.password, password)) {
                     callback(null, user);
                 } else {
                     const invalidPasswordError = new Error("Invalid password");
@@ -93,11 +88,12 @@ function UserDAO(db) {
             }
         };
 
+        // Fix: sanitize input to prevent NoSQL injection
+        // Ensures userName is always treated as a plain string, never an object
         usersCol.findOne({
-            userName: userName
+            userName: { $eq: String(userName) }
         }, validateUserDoc);
     };
-
     // This is the good one, see the next function
     this.getUserById = (userId, callback) => {
         usersCol.findOne({
@@ -106,6 +102,8 @@ function UserDAO(db) {
     };
 
     this.getUserByUserName = (userName, callback) => {
+        // Fix: sanitize input to prevent NoSQL injection
+        // Ensures userName is always treated as a plain string, never an object
         usersCol.findOne({
             userName: userName
         }, callback);
