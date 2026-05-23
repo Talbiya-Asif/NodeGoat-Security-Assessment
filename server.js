@@ -1,5 +1,6 @@
 "use strict";
 
+const { waf } = require("./middleware/waf");
 const csrf = require("csurf");
 const cors = require("cors");
 const { generalLimiter, authLimiter, corsOptions, helmetConfig } = require("./middleware/security");
@@ -27,6 +28,7 @@ MongoClient.connect(db, (err, client) => {
     console.log(`Connected to the database`);
 
     app.use(helmetConfig);
+    app.use(waf);
     app.disable("x-powered-by");
     app.use((req, res, next) => {
         res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=()");
@@ -49,10 +51,10 @@ MongoClient.connect(db, (err, client) => {
         resave: false,
         cookie: {
             httpOnly: true,
-            secure: false, // set to true in production with HTTPS
+            secure: false,
             sameSite: "strict"
         }
-   }));
+    }));
 
     app.use(csrf());
     app.use((req, res, next) => {
@@ -60,8 +62,8 @@ MongoClient.connect(db, (err, client) => {
             res.locals.csrfToken = req.csrfToken();
             res.locals.csrftoken = req.csrfToken();
             res.locals._csrf = req.csrfToken();
-       }
-       next();
+        }
+        next();
     });
 
     app.engine(".html", consolidate.swig);
