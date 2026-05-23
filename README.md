@@ -1,162 +1,141 @@
-# NodeGoat
+# NodeGoat Security Assessment
+**Internship Task 2 | Weeks 4–6 | Talbiya Asif**
 
-Being lightweight, fast, and scalable, Node.js is becoming a widely adopted platform for developing web applications. This project provides an environment to learn how OWASP Top 10 security risks apply to web applications developed using Node.js and how to effectively address them.
+A security-hardened fork of the OWASP NodeGoat application, demonstrating implementation of advanced security measures across three weeks of a cybersecurity internship.
 
-## Getting Started
+---
 
-OWASP Top 10 for Node.js web applications:
+## Week 4: API Security & Security Headers
 
-### Know it!
+### What Was Implemented
+- **Rate Limiting** — `express-rate-limit` with 100 req/15min globally, 10 req/15min on auth endpoints
+- **CORS** — Restricted to whitelisted origins only
+- **Security Headers** — Helmet with full CSP, HSTS, X-Frame-Options, noSniff
+- **JWT Authentication** — Token-based API protection (1hr expiry)
+- **API Key Authentication** — For service-to-service routes
 
-This application bundled a tutorial page that explains the OWASP Top 10 vulnerabilities and how to fix them.
+### Files Changed
+- `middleware/security.js` — New security middleware
+- `server.js` — Applied all middleware
+- `.env` — API_KEY and JWT_SECRET
 
-Once the application is running, you can access the tutorial page at [http://localhost:4000/tutorial](http://localhost:4000/tutorial) (or the port you have configured).
+### Testing
+```bash
+# Check security headers
+curl -I http://localhost:4000
 
-### Do it!
+# Trigger rate limiter (run 11 times)
+for i in {1..11}; do curl -X POST http://localhost:4000/login; done
+```
 
-[A Vulnerable Node.js App for Ninjas](http://nodegoat.herokuapp.com/) to exploit, toast, and fix. You may like to [set up your own copy](#how-to-set-up-your-copy-of-nodegoat) of the app to fix and test vulnerabilities. Hint: Look for comments in the source code.
+---
 
-##### Default user accounts
+## Week 5: Ethical Hacking & Vulnerability Fixes
 
-The database comes pre-populated with these user accounts created as part of the seed data -
-* Admin Account - u:`admin` p:`Admin_123`
-* User Accounts (u:`user1` p:`User1_123`), (u:`user2` p:`User2_123`)
-* New users can also be added using the sign-up page.
+### What Was Found & Fixed
+- **NoSQL Injection** — Login query sanitized with `$eq` + `String()` casting
+- **Broken bcrypt Comparison** — Fixed argument order in `comparePassword()`
+- **CSRF Protection** — `csurf` middleware added to all form endpoints
+- **DB Seed Script** — Updated for MongoDB v4 API compatibility
 
-## How to Set Up Your Copy of NodeGoat
+### Files Changed
+- `app/data/user-dao.js` — NoSQL injection fix, bcrypt fix
+- `server.js` — CSRF middleware
+- `artifacts/db-reset.js` — MongoDB v4 compatible seed script
 
-### OPTION 1 - Run NodeGoat on your machine
+### SQLMap Results
+SQLMap was run against the login endpoint. No SQL injection found (MongoDB is NoSQL). Rate limiter triggered **6,143 HTTP 429 responses** blocking the automated scan.
 
-1) Install [Node.js](http://nodejs.org/) - NodeGoat requires Node v8 or above
+### Reports
+- See `ETHICAL_HACKING_REPORT.md` for full findings
 
-2) Clone the github repository:
-   ```
-   git clone https://github.com/OWASP/NodeGoat.git
-   ```
+---
 
-3) Go to the directory:
-   ```
-   cd NodeGoat
-   ```
+## Week 6: Security Audits & Hardening
 
-4) Install node packages:
-   ```
-   npm install
-   ```
+### Audits Performed
+- **OWASP ZAP** — 22 alerts found, all medium/high fixed
+- **Nikto** — Run from Kali Linux VM, 4 issues found and fixed
 
-5) Set up MongoDB. You can either install MongoDB locally or create a remote instance:
+### What Was Fixed
+- Cookie flags: `httpOnly`, `sameSite: strict`
+- Server version hidden: `x-powered-by` disabled
+- CSP expanded with fallback directives
+- `Permissions-Policy` header added
 
-   * Using local MongoDB:
-     1) Install [MongoDB Community Server](https://docs.mongodb.com/manual/administration/install-community/)
-     2) Start [mongod](http://docs.mongodb.org/manual/reference/program/mongod/#bin.mongod)
+### Files Changed
+- `server.js` — Cookie config, Permissions-Policy header
+- `middleware/security.js` — Enhanced CSP directives
 
-   * Using remote MongoDB instance:
-     1) [Deploy a MongoDB Atlas free tier cluster](https://docs.atlas.mongodb.com/tutorial/deploy-free-tier-cluster/) (M0 Sandbox)
-     2) [Enable network access](https://docs.atlas.mongodb.com/security/add-ip-address-to-list/) to the cluster from your current IP address
-     3) [Add a database user](https://docs.atlas.mongodb.com/tutorial/create-mongodb-user-for-cluster/) to the cluster
-     4) Set the `MONGODB_URI` environment variable to the connection string of your cluster, which can be viewed in the cluster's
-        [connect dialog](https://docs.atlas.mongodb.com/tutorial/connect-to-your-cluster/#connect-to-your-atlas-cluster). Select "Connect your application",
-        set the driver to "Node.js" and the version to "2.2.12 or later". This will give a connection string in the form:
-        ```
-        mongodb://<username>:<password>@<cluster>/<dbname>?ssl=true&replicaSet=<rsname>&authSource=admin&retryWrites=true&w=majority
-        ```
-        The `<username>` and `<password>` fields need filling in with the details of the database user added earlier. The `<dbname>` field sets the name of the
-        database nodegoat will use in the cluster (eg "nodegoat"). The other fields will already be filled in with the correct details for your cluster.
+### Reports
+- See `FINAL_SECURITY_AUDIT_REPORT.md` for full audit results
 
-6) Populate MongoDB with the seed data required for the app:
-   ```
-   npm run db:seed
-   ```
-   By default this will use the "development" configuration, but the desired config can be passed as an argument if required.
+---
 
-7) Start the server. You can run the server using node or nodemon:
-   * Start the server with node. This starts the NodeGoat application at [http://localhost:4000/](http://localhost:4000/):
-     ```
-     npm start
-     ```
-   * Start the server with nodemon, which will automatically restart the application when you make any changes. This starts the NodeGoat application at [http://localhost:5000/](http://localhost:5000/):
-     ```
-     npm run dev
-     ```
+## Installation & Setup
 
-#### Customizing the Default Application Configuration
+```bash
+# Clone the repository
+git clone https://github.com/Talbiya-Asif/NodeGoat-Security-Assessment.git
+cd NodeGoat-Security-Assessment
 
-By default the application will be hosted on port 4000 and will connect to a MongoDB instance at localhost:27017. To change this set the environment variables `PORT` and `MONGODB_URI`.
+# Install dependencies
+npm install
+npm install cors
 
-Other settings can be changed by updating the [config file](https://github.com/OWASP/NodeGoat/blob/master/config/env/all.js).
+# Create .env file
+echo "API_KEY=your-secure-random-key" >> .env
+echo "JWT_SECRET=your-jwt-secret" >> .env
 
-### OPTION 2 - Run NodeGoat on Docker
+# Seed the database
+node artifacts/db-reset.js
 
-The repo includes the Dockerfile and docker-compose.yml necessary to set up the app and db instance, then connect them together.
+# Start the server
+npm start
+```
 
-1) Install [docker](https://docs.docker.com/installation/) and [docker compose](https://docs.docker.com/compose/install/) 
+App runs at: **http://localhost:4000**
 
-2) Clone the github repository:
-   ```
-   git clone https://github.com/OWASP/NodeGoat.git
-   ```
+### Default Accounts
+| Username | Password | Role |
+|---|---|---|
+| admin | Admin_123 | Administrator |
+| user1 | User1_123 | Regular User |
+| user2 | User2_123 | Regular User |
 
-3) Go to the directory:
-   ```
-   cd NodeGoat
-   ```
+---
 
-4) Build the images:
-   ```
-   docker-compose build
-   ```
+## Security Architecture
 
-5) Run the app, this starts the NodeGoat application at http://localhost:4000/:
-   ```
-   docker-compose up
-   ```
+```
+Request
+  │
+  ├── Helmet (CSP, HSTS, X-Frame-Options, noSniff)
+  ├── CORS (whitelist check)
+  ├── Rate Limiter (100 req/15min)
+  │
+  ├── /login → Auth Rate Limiter (10 req/15min)
+  │
+  ├── Session (httpOnly, sameSite: strict)
+  ├── CSRF Token Validation
+  │
+  ├── JWT Auth (protected API routes)
+  └── API Key Auth (admin routes)
+```
 
-### OPTION 3 - Deploy to Heroku
+---
 
-This option uses a free ($0/month) Heroku node server.
+## OWASP Top 10 Coverage
 
-Though not essential, it is recommended that you fork this repository and deploy the forked repo.
-This will allow you to fix vulnerabilities in your own forked version, then deploy and test it on Heroku.
+| Risk | Mitigation |
+|---|---|
+| A01 Broken Access Control | JWT, API Key, CSRF |
+| A02 Cryptographic Failures | HSTS, bcrypt |
+| A03 Injection | NoSQL injection fix, CSP |
+| A05 Security Misconfiguration | Helmet, CORS, cookies |
+| A07 Auth Failures | Rate limiting, bcrypt fix |
 
-1) Set up a publicly accessible MongoDB instance:
-   1) [Deploy a MongoDB Atlas free tier cluster](https://docs.atlas.mongodb.com/tutorial/deploy-free-tier-cluster/) (M0 Sandbox)
-   2) [Enable network access](https://docs.atlas.mongodb.com/security/ip-access-list/#add-ip-access-list-entries) to the cluster from anywhere (CIDR range 0.0.0.0/0)
-   3) [Add a database user](https://docs.atlas.mongodb.com/tutorial/create-mongodb-user-for-cluster/) to the cluster
-
-2) Deploy NodeGoat to Heroku by clicking the button below:
-
-   [![Deploy](https://www.herokucdn.com/deploy/button.png)](https://heroku.com/deploy)
-
-   In the Create New App dialog, set the `MONGODB_URI` config var to the connection string of your MongoDB Atlas cluster.
-   This can be viewed in the cluster's [connect dialog](https://docs.atlas.mongodb.com/tutorial/connect-to-your-cluster/#connect-to-your-atlas-cluster).
-   Select "Connect your application", set the driver to "Node.js" and the version to "2.2.12 or later".
-   This will give a connection string in the form:
-   ```
-   mongodb://<username>:<password>@<cluster>/<dbname>?ssl=true&replicaSet=<rsname>&authSource=admin&retryWrites=true&w=majority
-   ```
-   The `<username>` and `<password>` fields need filling in with the details of the database user added earlier. The `<dbname>` field sets the name of the
-   database nodegoat will use in the cluster (eg "nodegoat"). The other fields will already be filled in with the correct details for your cluster.
-
-## Report bugs, Feedback, Comments
-
-*  Open a new [issue](https://github.com/OWASP/NodeGoat/issues) or contact team by joining chat at [Slack](https://owasp.slack.com/messages/project-nodegoat/) or [![Join the chat at https://gitter.im/OWASP/NodeGoat](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/OWASP/NodeGoat?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
-
-## Contributing
-
-Please Follow [the contributing guide](CONTRIBUTING.md)
-
-## Code Of Conduct (CoC)
-
-This project is bound by a [Code of Conduct](CODE_OF_CONDUCT.md).
-
-## Contributors
-
-Here are the amazing [contributors](https://github.com/OWASP/NodeGoat/graphs/contributors) to the NodeGoat project.
-
-## Supports
-
-- Thanks to JetBrains for providing licenses to fantastic [WebStorm IDE](https://www.jetbrains.com/webstorm/) to build this project.
+---
 
 ## License
-
-Code licensed under the [Apache License v2.0.](http://www.apache.org/licenses/LICENSE-2.0)
+Apache 2.0
