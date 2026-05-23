@@ -27,6 +27,11 @@ MongoClient.connect(db, (err, client) => {
     console.log(`Connected to the database`);
 
     app.use(helmetConfig);
+    app.disable("x-powered-by");
+    app.use((req, res, next) => {
+        res.setHeader("Permissions-Policy", "geolocation=(), microphone=(), camera=(), payment=()");
+        next();
+    });
     app.use(cors(corsOptions));
     app.use(generalLimiter);
     app.use("/login", authLimiter);
@@ -40,9 +45,15 @@ MongoClient.connect(db, (err, client) => {
 
     app.use(session({
         secret: cookieSecret,
-        saveUninitialized: true,
-        resave: true
-    }));
+        saveUninitialized: false,
+        resave: false,
+        cookie: {
+            httpOnly: true,
+            secure: false, // set to true in production with HTTPS
+            sameSite: "strict"
+        }
+   }));
+
     app.use(csrf());
     app.use((req, res, next) => {
         if (req.csrfToken) {

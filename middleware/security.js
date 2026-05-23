@@ -66,9 +66,14 @@ const helmetConfig = helmet({
             objectSrc: ["'none'"],
             frameSrc: ["'none'"],
             baseUri: ["'self'"],
-            formAction: ["'self'"]
+            formAction: ["'self'"],
+            frameAncestors: ["'none'"],
+            manifestSrc: ["'self'"],
+            mediaSrc: ["'none'"],
+           workerSrc: ["'none'"]
         }
-    },
+   },
+    
     hsts: {
         maxAge: 31536000,
         includeSubDomains: true,
