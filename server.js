@@ -1,5 +1,7 @@
 "use strict";
 
+const cors = require("cors");
+const { generalLimiter, authLimiter, corsOptions, helmetConfig } = require("./middleware/security");
 const express = require("express");
 const favicon = require("serve-favicon");
 const bodyParser = require("body-parser");
@@ -12,8 +14,7 @@ const marked = require("marked");
 const app = express();
 const routes = require("./app/routes");
 const { port, db, cookieSecret } = require("./config/config");
-const helmet = require("helmet");
-const rateLimit = require("express-rate-limit");
+
 
 MongoClient.connect(db, (err, client) => {
     if (err) {
@@ -24,13 +25,11 @@ MongoClient.connect(db, (err, client) => {
     const db = client.db("nodegoat");
     console.log(`Connected to the database`);
 
-    app.use(helmet());
-    const loginLimiter = rateLimit({
-        windowMs: 15 * 60 * 1000,
-        max: 5,
-        message: "Too many login attempts. Try again in 15 minutes."
-    }); 
-    app.use("/login", loginLimiter);
+    app.use(helmetConfig);
+    app.use(cors(corsOptions));
+    app.use(generalLimiter);
+    app.use("/login", authLimiter);
+
     app.use(favicon(__dirname + "/app/assets/favicon.ico"));
 
     app.use(bodyParser.json());
