@@ -7,6 +7,7 @@ const MemosHandler = require("./memos");
 const ResearchHandler = require("./research");
 const tutorialRouter = require("./tutorial");
 const ErrorHandler = require("./error").errorHandler;
+const { zeroTrustAuth, ownDataOnly, accessLog } = require("../../middleware/zerotrust");
 
 const index = (app, db) => {
 
@@ -22,7 +23,8 @@ const index = (app, db) => {
 
     // Middleware to check if a user is logged in
     const isLoggedIn = sessionHandler.isLoggedInMiddleware;
-
+    // Zero Trust: log every access
+    app.use(accessLog);
     //Middleware to check if user has admin rights
     const isAdmin = sessionHandler.isAdminUserMiddleware;
 
@@ -60,7 +62,8 @@ const index = (app, db) => {
      */
 
     // Allocations Page
-    app.get("/allocations/:userId", isLoggedIn, allocationsHandler.displayAllocations);
+    // Zero Trust: user can only access their own allocations
+    app.get("/allocations/:userId", isLoggedIn, ownDataOnly, allocationsHandler.displayAllocations);
 
     // Memos Page
     app.get("/memos", isLoggedIn, memosHandler.displayMemos);
