@@ -102,12 +102,10 @@ function UserDAO(db) {
     };
 
     this.getUserByUserName = (userName, callback) => {
-        // Fix: sanitize input to prevent NoSQL injection
-        // Ensures userName is always treated as a plain string, never an object
         usersCol.findOne({
-            userName: userName
+            userName: { $eq: String(userName) }
         }, callback);
-    };
+   };
 
     this.getNextSequence = (name, callback) => {
         db.collection("counters").findOneAndUpdate(
