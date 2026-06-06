@@ -72,6 +72,16 @@ SQLMap was run against the login endpoint. No SQL injection found (MongoDB is No
 
 ---
 
+## Bonus Challenges (Completed)
+
+| Challenge | Implementation | File |
+|---|---|---|
+| Zero Trust Security | Every request re-verified via JWT, no implicit trust | `middleware/zerotrust.js` |
+| Web Application Firewall | WAF middleware blocking malicious payloads | `middleware/waf.js` |
+| Social Engineering Simulation | Phishing awareness training & findings documented | `SOCIAL_ENGINEERING_REPORT.md` |
+
+---
+
 ## Installation & Setup
 
 ```bash
@@ -134,6 +144,12 @@ Request
 | A03 Injection | NoSQL injection fix, CSP |
 | A05 Security Misconfiguration | Helmet, CORS, cookies |
 | A07 Auth Failures | Rate limiting, bcrypt fix |
+
+---
+---
+
+## Deployment Note
+Deployment to a public server was intentionally omitted — NodeGoat is a deliberately vulnerable application and exposing it publicly would create real security risks. Secure deployment practices including Docker image scanning, HTTPS configuration, and dependency auditing are fully documented in `FINAL_SECURITY_AUDIT_REPORT.md` Section 7.
 
 ---
 
